@@ -7,47 +7,26 @@ const runtimeConfig = useRuntimeConfig();
 // State
 const code = route.query.code as string;
 
+// Types
+interface AuthenticateResponse {
+    access_token: string;
+}
+
 // Methods
 async function getAccessToken(code: string) {
     try {
-        const response = await fetch(
-            "https://api.clickup.com/api/v2/oauth/token" +
-                "?client_id=" +
-                runtimeConfig.public.clientId +
-                "&client_secret=" +
-                runtimeConfig.public.clientSecret +
-                "&code=" +
-                code,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+        const { data } = await useFetch("/api/authenticate", {
+            method: "POST",
+            body: { code },
+        });
 
-        if (!response.ok) {
-            throw new Error("Failed to get access token");
-        }
-
-        const data = await response.json();
         // Store the access token securely (you might want to use a more secure storage method)
-        localStorage.setItem("clickup_access_token", data.access_token);
-
-        // toast({
-        //     title: "Success",
-        //     description: "Successfully connected to ClickUp",
-        // });
+        localStorage.setItem("clickup_access_token", data.value?.access_token);
 
         // Redirect to the dashboard or home page
         router.push("/");
     } catch (error) {
         console.error("Error getting access token:", error);
-        // toast({
-        //     title: "Error",
-        //     description: "Failed to connect to ClickUp",
-        //     variant: "destructive",
-        // });
         router.push("/login");
     }
 }
